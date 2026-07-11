@@ -18,8 +18,38 @@ This is a fork focused solely on item cards. Compared to the original
   large template;
 - tiles cards **natively** onto A4 landscape sheets (4 small cards or 2 large
   cards per page) — no TeX/`pdfjam` dependency;
-- ships as a **`cardgen`** Python library plus (see Phase B) a local web GUI in a
+- ships as a **`cardgen`** Python library plus a local **web GUI** in a
   lightweight Docker container.
+
+## Web app (Docker)
+
+The easiest way to use it. Cards you create are autosaved as YAML into a
+host-mounted `./data` directory and reloaded next time.
+
+```
+docker compose up --build
+```
+
+Then open <http://localhost:8000>. Build cards in the form on the left, click
+**Preview** to see the A4 PDF inline, and **Download A4 PDF** to save it.
+
+- Every edit autosaves to `./data/cards/<id>.yaml`; uploaded artwork goes to
+  `./data/images/<id>.<ext>`. Both are plain files you can edit or back up on the
+  host, and they survive container restarts.
+- The **Library** panel lists saved cards; click one to reload it.
+- Images are optional (a placeholder is used otherwise) and can be cropped to the
+  card's aspect ratio in the browser before upload.
+
+To swap the placeholder artwork, bind-mount your own over
+`/app/assets/placeholder_item.png` (see the commented line in
+`docker-compose.yml`).
+
+### Running the web app without Docker
+
+```
+.venv/bin/pip install -r requirements.txt
+CARDGEN_DATA_DIR=./data .venv/bin/uvicorn webapp.main:app --port 8000
+```
 
 ## The `cardgen` library
 

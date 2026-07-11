@@ -1,0 +1,14 @@
+services:
+  cardgen:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persisted cards + images. Directly readable/editable on the host.
+      - ./data:/data
+      # To use your own placeholder artwork, uncomment and point at your file:
+      # - ./my-placeholder.png:/app/assets/placeholder_item.png:ro
+    # environment:
+      # Enable an (external) AI image provider once one is implemented:
+      # - CARDGEN_IMAGE_PROVIDER=
+    restart: unless-stopped

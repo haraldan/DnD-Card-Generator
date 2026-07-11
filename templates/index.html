@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>D&amp;D Item Card Generator</title>
+  <link rel="stylesheet" href="/static/cropper.min.css" />
+  <link rel="stylesheet" href="/static/app.css" />
+</head>
+<body data-has-image-provider="__HAS_IMAGE_PROVIDER__">
+  <header class="toolbar">
+    <h1>D&amp;D Item Card Generator</h1>
+    <div class="toolbar-actions">
+      <button id="add-card" type="button">+ Add card</button>
+      <button id="preview" type="button">Preview</button>
+      <button id="download" type="button" class="primary">Download A4 PDF</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <aside class="library" aria-label="Saved cards">
+      <h2>Library</h2>
+      <ul id="library-list"></ul>
+      <p id="library-empty" class="muted">No saved cards yet.</p>
+    </aside>
+
+    <section class="builder" id="builder" aria-label="Card builder"></section>
+
+    <aside class="preview">
+      <h2>Preview</h2>
+      <p id="preview-errors" class="errors" hidden></p>
+      <iframe id="preview-frame" title="A4 PDF preview"></iframe>
+    </aside>
+  </main>
+
+  <!-- Card editor template -->
+  <template id="card-template">
+    <article class="card-editor" data-id="">
+      <div class="card-editor-head">
+        <input class="f-title" type="text" placeholder="Item name" aria-label="Item name" />
+        <button class="del-card danger" type="button" title="Delete card">&times;</button>
+      </div>
+      <div class="grid2">
+        <label>Subtitle
+          <input class="f-subtitle" type="text" placeholder="Weapon (battleaxe), rare" />
+        </label>
+        <label>Colour
+          <input class="f-color" type="color" value="#b01a1a" />
+        </label>
+        <label>Category
+          <input class="f-category" type="text" placeholder="Weapon" />
+        </label>
+        <label>Subcategory
+          <input class="f-subcategory" type="text" placeholder="Battleaxe" />
+        </label>
+      </div>
+
+      <div class="image-row">
+        <img class="thumb" alt="" hidden />
+        <div class="image-actions">
+          <label class="filebtn">Upload image
+            <input class="f-image" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+          </label>
+          <button class="crop-btn" type="button" hidden>Crop</button>
+          <button class="del-image" type="button" hidden>Remove image</button>
+        </div>
+      </div>
+
+      <div class="desc">
+        <div class="desc-head">
+          <span>Description</span>
+          <span class="desc-add">
+            <button class="add-text" type="button">+ Text</button>
+            <button class="add-kv" type="button">+ Key/Value</button>
+          </span>
+        </div>
+        <ul class="desc-rows"></ul>
+      </div>
+    </article>
+  </template>
+
+  <template id="row-text">
+    <li class="desc-row" data-type="text">
+      <textarea class="r-text" rows="2" placeholder="Description text"></textarea>
+      <button class="del-row danger" type="button" title="Remove row">&times;</button>
+    </li>
+  </template>
+
+  <template id="row-kv">
+    <li class="desc-row" data-type="kv">
+      <input class="r-key" type="text" placeholder="Name" />
+      <textarea class="r-value" rows="2" placeholder="Text (optional)"></textarea>
+      <button class="del-row danger" type="button" title="Remove row">&times;</button>
+    </li>
+  </template>
+
+  <!-- Crop modal -->
+  <div id="crop-modal" class="modal" hidden>
+    <div class="modal-box">
+      <div class="crop-stage"><img id="crop-image" alt="" /></div>
+      <div class="modal-actions">
+        <button id="crop-cancel" type="button">Cancel</button>
+        <button id="crop-apply" type="button" class="primary">Apply crop</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/cropper.min.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
