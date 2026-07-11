@@ -2,7 +2,7 @@
   subtitle: Wondrous item, rare (requires attunement)
   image_path: badge.png
   color: "#7a3b2e"
-  font_scale: 1.1
+  font_size: 9
   description: |-
     Wearing this amulet adds a minimum of 10d8 syllables to your name. The
     effect is permanent and stacks every time the amulet is worn.

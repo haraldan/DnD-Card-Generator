@@ -21,15 +21,19 @@ class TemplateTooSmall(Exception):
 class LineDivider(Flowable):
     """A thin horizontal rule drawn in the card's border colour to separate
     description sections. It extends past the frame's text padding by `extend`
-    on each side so it reaches the card body edges (the coloured border)."""
+    on each side so it reaches the card body edges (the coloured border), and
+    carries paragraph-like space above and below so blank lines around a `---`
+    read as a real break."""
 
-    def __init__(self, fill_color="black", line_height=0.35 * mm, spacing=1.2 * mm, extend=0):
+    def __init__(self, fill_color="black", line_height=0.4 * mm, space=1.6 * mm, extend=0):
         self.fill_color = fill_color
         self.line_height = line_height
-        self.spacing = spacing
         self.extend = extend
         self.width = 0
-        self.height = line_height + spacing
+        self.height = line_height
+        # Honoured by ReportLab's Frame layout (same mechanism as Paragraph).
+        self.spaceBefore = space
+        self.spaceAfter = space
 
     def wrap(self, available_width, available_height):
         self.width = available_width
@@ -40,7 +44,7 @@ class LineDivider(Flowable):
         canvas.setFillColor(self.fill_color)
         canvas.rect(
             -self.extend,
-            self.spacing / 2,
+            0,
             self.width + 2 * self.extend,
             self.line_height,
             stroke=0,

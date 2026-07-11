@@ -31,7 +31,7 @@ SMALL = {
 MARKDOWN = {
     "title": "Markdown Item",
     "subtitle": "Wondrous item, rare",
-    "font_scale": 1.2,
+    "font_size": 11,
     "description": (
         "1d12 slashing\n\n"
         "---\n\n"

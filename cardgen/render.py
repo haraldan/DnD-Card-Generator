@@ -74,7 +74,7 @@ def _entry_to_kwargs(entry, options):
         "image_path": resolve_image(clean),
         "description": clean.get("description", ""),
         "border_color": clean.get("color") or DEFAULT_COLOR,
-        "font_scale": float(clean.get("font_scale", 1.0) or 1.0),
+        "font_size": clean.get("font_size"),
         "bleed": options.bleed_mm * mm,
     }
 

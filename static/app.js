@@ -28,7 +28,7 @@ function serializeCard(node) {
     title: node.querySelector(".f-title").value,
     subtitle: node.querySelector(".f-subtitle").value,
     color: node.querySelector(".f-color").value,
-    font_scale: parseFloat(node.querySelector(".f-fontscale").value) || 1.0,
+    font_size: parseFloat(node.querySelector(".f-fontsize").value) || 8,
     description: node.querySelector(".f-description").value,
   };
 }
@@ -118,7 +118,7 @@ function buildCard(data) {
   node.querySelector(".f-subtitle").value = data.subtitle || "";
   if (data.color) node.querySelector(".f-color").value = normalizeColor(data.color);
   node.querySelector(".f-description").value = data.description || "";
-  node.querySelector(".f-fontscale").value = data.font_scale || 1.0;
+  node.querySelector(".f-fontsize").value = data.font_size || 8;
 
   if (data.has_image) showThumb(node);
 

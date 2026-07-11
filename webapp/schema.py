@@ -9,14 +9,14 @@ case:
 """
 from pydantic import BaseModel
 
-from cardgen.layout import DEFAULT_COLOR
+from cardgen.layout import DEFAULT_COLOR, DEFAULT_FONT_SIZE
 
 
 class CardIn(BaseModel):
     title: str = ""
     subtitle: str = ""
     color: str = DEFAULT_COLOR
-    font_scale: float = 1.0
+    font_size: float = DEFAULT_FONT_SIZE  # body/subtitle size in points
     # Description is authored as Markdown (the stored source of truth).
     description: str = ""
 
@@ -30,8 +30,8 @@ def to_native(card: CardIn) -> dict:
     }
     if card.color:
         entry["color"] = card.color
-    if card.font_scale and card.font_scale != 1.0:
-        entry["font_scale"] = card.font_scale
+    if card.font_size:
+        entry["font_size"] = card.font_size
     return entry
 
 
@@ -44,7 +44,7 @@ def to_browser(entry: dict) -> dict:
         "title": entry.get("title", ""),
         "subtitle": entry.get("subtitle", ""),
         "color": entry.get("color", DEFAULT_COLOR),
-        "font_scale": float(entry.get("font_scale", 1.0) or 1.0),
+        "font_size": float(entry.get("font_size") or DEFAULT_FONT_SIZE),
         "description": entry.get("description") or "",
         "has_image": bool(entry.get("image_path")),
     }

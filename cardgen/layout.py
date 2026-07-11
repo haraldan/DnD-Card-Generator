@@ -15,6 +15,9 @@ from .markdown_render import parse_markdown
 # distinct mid-tone when printed in black and white.
 DEFAULT_COLOR = "#3a5a78"
 
+# Default body-text / subtitle size, in points.
+DEFAULT_FONT_SIZE = 8.0
+
 
 class CardLayout:
     CARD_CORNER_DIAMETER = 3 * mm
@@ -295,12 +298,13 @@ class ItemCardLayout(CardLayout):
         subtitle,
         image_path,
         description,
-        font_scale=1.0,
+        font_size=None,
         **kwargs,
     ):
         super().__init__(title, subtitle, image_path, **kwargs)
         self.description = description
-        self.font_scale = font_scale or 1.0
+        # Body-text / subtitle size in points.
+        self.font_size = float(font_size) if font_size else DEFAULT_FONT_SIZE
 
     def _band_baseline(self, font_mm):
         """Baseline that vertically centres text of the given cap size in the
@@ -310,7 +314,7 @@ class ItemCardLayout(CardLayout):
 
     def _draw_front_label(self, canvas):
         # Item name, centred in the front bottom band. The title font is NOT
-        # affected by font_scale — only its length-based auto-shrink.
+        # affected by font_size — only its length-based auto-shrink.
         if not self.title:
             return
         canvas.saveState()
@@ -324,22 +328,20 @@ class ItemCardLayout(CardLayout):
         canvas.restoreState()
 
     def _text_style(self):
-        """Body-text paragraph style, scaled by the card's font_scale."""
+        """Body-text paragraph style at the card's font size (points)."""
         style = copy(self.fonts.paragraph_styles["text"])
-        if self.font_scale != 1.0:
-            style.fontSize *= self.font_scale
-            style.leading *= self.font_scale
+        style.fontSize = self.font_size
+        style.leading = self.font_size * 1.2
         return style
 
     def _subtitle_style(self):
-        """Subtitle style: coloured band following the card colour, scaled by
-        font_scale to stay consistent with the body text. The coloured band
-        grows with the text because it is the paragraph's backColor."""
+        """Subtitle style: same font size as the body text, on a coloured band
+        that follows the card colour. The band grows with the text because it
+        is the paragraph's backColor."""
         style = copy(self.fonts.paragraph_styles["subtitle"])
         style.backColor = self.border_color
-        if self.font_scale != 1.0:
-            style.fontSize *= self.font_scale
-            style.leading *= self.font_scale
+        style.fontSize = self.font_size
+        style.leading = self.font_size * 1.2
         return style
 
     def fill_frames(self, canvas):
