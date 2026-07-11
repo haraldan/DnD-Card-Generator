@@ -6,6 +6,7 @@
   --line: #ddd8cd;
   --accent: #b01a1a;
   --accent-ink: #ffffff;
+  --sidebar: 220px;
 }
 
 * { box-sizing: border-box; }
@@ -29,8 +30,9 @@ body {
   top: 0;
   z-index: 5;
 }
-.toolbar h1 { font-size: 1.1rem; margin: 0; }
 .toolbar-actions { display: flex; gap: 0.5rem; }
+/* Add-card button matches the Library column width and left alignment. */
+#add-card { width: var(--sidebar); }
 
 button {
   font: inherit;
@@ -47,7 +49,7 @@ button.danger { color: var(--accent); border: none; background: transparent; fon
 
 .layout {
   display: grid;
-  grid-template-columns: 220px minmax(320px, 1fr) minmax(360px, 42vw);
+  grid-template-columns: var(--sidebar) minmax(320px, 1fr) minmax(360px, 42vw);
   gap: 1rem;
   padding: 1rem;
   align-items: start;
