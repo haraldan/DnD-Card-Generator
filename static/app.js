@@ -26,7 +26,9 @@ function serializeCard(node) {
   const id = node.dataset.id;
   const rows = [];
   node.querySelectorAll(".desc-row").forEach((row) => {
-    if (row.dataset.type === "kv") {
+    if (row.dataset.type === "divider") {
+      rows.push({ type: "divider" });
+    } else if (row.dataset.type === "kv") {
       rows.push({
         type: "kv",
         key: row.querySelector(".r-key").value,
@@ -43,6 +45,7 @@ function serializeCard(node) {
     category: node.querySelector(".f-category").value,
     subcategory: node.querySelector(".f-subcategory").value,
     color: node.querySelector(".f-color").value,
+    font_scale: parseFloat(node.querySelector(".f-fontscale").value) || 1.0,
     description: rows,
   };
 }
@@ -65,13 +68,14 @@ function scheduleSave(node) {
 
 // ------------------------------------------------------------------ rows
 function addRow(node, type, data) {
-  const tpl = document.getElementById(type === "kv" ? "row-kv" : "row-text");
+  const tplId = type === "kv" ? "row-kv" : type === "divider" ? "row-divider" : "row-text";
+  const tpl = document.getElementById(tplId);
   const row = tpl.content.firstElementChild.cloneNode(true);
   if (data) {
     if (type === "kv") {
       row.querySelector(".r-key").value = data.key || "";
       row.querySelector(".r-value").value = data.value || "";
-    } else {
+    } else if (type === "text") {
       row.querySelector(".r-text").value = data.text || "";
     }
   }
@@ -153,6 +157,7 @@ function buildCard(data) {
   node.querySelector(".f-category").value = data.category || "";
   node.querySelector(".f-subcategory").value = data.subcategory || "";
   if (data.color) node.querySelector(".f-color").value = normalizeColor(data.color);
+  node.querySelector(".f-fontscale").value = data.font_scale || 1.0;
 
   (data.description || []).forEach((row) => addRow(node, row.type, row));
   if (data.has_image) showThumb(node);
@@ -162,6 +167,7 @@ function buildCard(data) {
 
   node.querySelector(".add-text").addEventListener("click", () => { addRow(node, "text"); scheduleSave(node); });
   node.querySelector(".add-kv").addEventListener("click", () => { addRow(node, "kv"); scheduleSave(node); });
+  node.querySelector(".add-line").addEventListener("click", () => { addRow(node, "divider"); scheduleSave(node); });
 
   node.querySelector(".del-card").addEventListener("click", async () => {
     await fetch(`/cards/${node.dataset.id}`, { method: "DELETE" });
@@ -190,7 +196,7 @@ function buildCard(data) {
 
 function normalizeColor(c) {
   // <input type=color> only accepts #rrggbb; leave hex as-is, otherwise default.
-  return /^#[0-9a-fA-F]{6}$/.test(c) ? c : "#b01a1a";
+  return /^#[0-9a-fA-F]{6}$/.test(c) ? c : "#3a5a78";
 }
 
 function findCardNode(id) {
@@ -240,7 +246,7 @@ async function loadCardIntoBuilder(id) {
 
 // ------------------------------------------------------------------ toolbar
 document.getElementById("add-card").addEventListener("click", () => {
-  const data = { id: uuid(), color: "#b01a1a", description: [] };
+  const data = { id: uuid(), color: "#3a5a78", description: [] };
   const node = buildCard(data);
   saveCard(node); // persist immediately so it appears in the library
   node.querySelector(".f-title").focus();
@@ -281,7 +287,7 @@ async function init() {
     buildCard(full);
   }
   if (cards.length === 0) {
-    buildCard({ id: uuid(), color: "#b01a1a", description: [] });
+    buildCard({ id: uuid(), color: "#3a5a78", description: [] });
   }
   refreshLibrary();
 }

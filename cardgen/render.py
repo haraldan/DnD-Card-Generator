@@ -9,7 +9,7 @@ from reportlab.pdfgen import canvas as canvas_module
 from .flowables import TemplateTooSmall
 from .fonts import FreeFonts, AccurateFonts
 from .images import resolve_image
-from .layout import CardLayout, ItemCardSmall, ItemCardLarge
+from .layout import CardLayout, ItemCardSmall, ItemCardLarge, DEFAULT_COLOR
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,8 @@ def _entry_to_kwargs(entry, options):
         "category": clean.get("category", ""),
         "subcategory": clean.get("subcategory", None),
         "description": clean.get("description", []),
-        "border_color": clean.get("color", "red"),
+        "border_color": clean.get("color") or DEFAULT_COLOR,
+        "font_scale": float(clean.get("font_scale", 1.0) or 1.0),
         "bleed": options.bleed_mm * mm,
     }
 

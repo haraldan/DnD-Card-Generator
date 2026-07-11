@@ -3,11 +3,16 @@ import os
 from copy import copy
 
 from reportlab.lib.units import mm
+from reportlab.lib.utils import ImageReader
 from reportlab.platypus import Frame, Paragraph
-from reportlab.platypus.flowables import Spacer, Image
+from reportlab.platypus.flowables import Spacer
 
-from .flowables import Border, TemplateTooSmall, get_image_size
+from .flowables import Border, LineDivider, TemplateTooSmall
 from .fonts import FreeFonts
+
+# Default frame/subtitle colour: a muted slate blue. Pleasant on screen and a
+# distinct mid-tone when printed in black and white.
+DEFAULT_COLOR = "#3a5a78"
 
 
 class CardLayout:
@@ -27,7 +32,7 @@ class CardLayout:
         subtitle,
         artist,
         image_path,
-        border_color="red",
+        border_color=DEFAULT_COLOR,
         border_front=(0, 0, 0, 0),  # uninitialized
         border_back=(0, 0, 0, 0),  # uninitialized
         width=0,  # uninitialized
@@ -75,34 +80,33 @@ class CardLayout:
         pass
 
     # ------------------------------------------------------------------
-    def _draw_front_frame(self, canvas, width, height):
-        front_frame = Frame(
-            self.border_front[Border.LEFT],
-            self.border_front[Border.BOTTOM],
-            width - self.border_front[Border.LEFT] - self.border_front[Border.RIGHT],
-            height - self.border_front[Border.TOP] - self.border_front[Border.BOTTOM],
-            leftPadding=self.TEXT_MARGIN,
-            bottomPadding=self.TEXT_MARGIN,
-            rightPadding=self.TEXT_MARGIN,
-            topPadding=self.TEXT_MARGIN,
+    def _body_rect(self, margins):
+        """The white body rectangle (x, y, w, h) inside the given borders."""
+        x = margins[Border.LEFT]
+        y = margins[Border.BOTTOM]
+        w = self.width - margins[Border.LEFT] - margins[Border.RIGHT]
+        h = self.height - margins[Border.TOP] - margins[Border.BOTTOM]
+        return x, y, w, h
+
+    def _draw_front_image(self, canvas):
+        """Draw the artwork so it *covers* the body area (cropping overflow),
+        clipped to the rounded body rectangle so it fills the frame with no
+        surrounding white space."""
+        x, y, w, h = self._body_rect(self.border_front)
+        iw, ih = ImageReader(self.front_image_path).getSize()
+        scale = max(w / iw, h / ih)  # cover
+        dw, dh = iw * scale, ih * scale
+        dx = x + (w - dw) / 2
+        dy = y + (h - dh) / 2
+
+        canvas.saveState()
+        clip = canvas.beginPath()
+        clip.roundRect(x, y, w, h, self.BACKGROUND_CORNER_DIAMETER)
+        canvas.clipPath(clip, stroke=0, fill=0)
+        canvas.drawImage(
+            self.front_image_path, dx, dy, width=dw, height=dh, mask="auto"
         )
-
-        available_width = front_frame.width - 2 * self.TEXT_MARGIN
-        available_height = front_frame.height - 2 * self.TEXT_MARGIN
-
-        image_width, image_height = get_image_size(
-            self.front_image_path, available_width, available_height
-        )
-
-        elements = []
-        space = available_height - image_height
-        if space > 0:
-            elements.append(Spacer(available_width, space / 2))
-        elements.append(Image(self.front_image_path, image_width, image_height))
-        if space > 0:
-            elements.append(Spacer(available_width, space / 2))
-
-        front_frame.addFromList(elements, canvas)
+        canvas.restoreState()
 
     def _draw_frames(self, canvas, split=False):
         frames = iter(self.frames)
@@ -110,6 +114,10 @@ class CardLayout:
 
         while len(self.elements) > 0:
             element = self.elements.pop(0)
+
+            # Don't draw a divider with nothing after it (trailing rule).
+            if isinstance(element, LineDivider) and len(self.elements) == 0:
+                break
 
             result = current_frame.add(element, canvas)
             if result == 0:
@@ -137,8 +145,8 @@ class CardLayout:
         self._draw_single_border(canvas, 0, self.width, self.height)
         # White card body (clipped rounded rect)
         self._draw_single_background(canvas, 0, self.border_front, self.width, self.height)
-        # Artwork fills the content area above the bottom band
-        self._draw_front_frame(canvas, self.width, self.height)
+        # Artwork covers the body area above the bottom band
+        self._draw_front_image(canvas)
         # Item name in the bottom band
         self._draw_front_label(canvas)
         canvas.restoreState()
@@ -277,6 +285,9 @@ class LargeCard(CardLayout):
 
 
 class ItemCardLayout(CardLayout):
+    # Fraction of the font size occupied by cap height (for vertical centring).
+    _CAP_HEIGHT_RATIO = 0.7
+
     def __init__(
         self,
         title,
@@ -286,17 +297,20 @@ class ItemCardLayout(CardLayout):
         category,
         subcategory,
         description,
+        font_scale=1.0,
         **kwargs,
     ):
         super().__init__(title, subtitle, artist, image_path, **kwargs)
         self.category = category
         self.subcategory = subcategory
         self.description = description
+        self.font_scale = font_scale or 1.0
 
-    def _band_baseline(self, section):
-        """Vertical baseline that centres `section` font in the bottom band."""
-        font_mm = self.fonts.styles[section][1] * self.fonts.FONT_SCALE
-        return self.bleed + (self.BOTTOM_BAND - font_mm) / 2
+    def _band_baseline(self, font_mm):
+        """Baseline that vertically centres text of the given cap size in the
+        bottom band (accounts for cap height, not full font box)."""
+        cap = font_mm * self._CAP_HEIGHT_RATIO
+        return self.bleed + (self.BOTTOM_BAND - cap) / 2
 
     def _draw_front_label(self, canvas):
         if not self.title:
@@ -306,8 +320,9 @@ class ItemCardLayout(CardLayout):
         scale = min(1.0, 20 / len(self.title))
         self.fonts.set_font(canvas, "title", custom_scale=scale)
         font_mm = self.fonts.styles["title"][1] * self.fonts.FONT_SCALE * scale
-        baseline = self.bleed + (self.BOTTOM_BAND - font_mm) / 2
-        canvas.drawCentredString(self.width / 2, baseline, self.title.upper())
+        canvas.drawCentredString(
+            self.width / 2, self._band_baseline(font_mm), self.title.upper()
+        )
         canvas.restoreState()
 
     def _draw_back(self, canvas):
@@ -319,10 +334,27 @@ class ItemCardLayout(CardLayout):
         text = self.category or ""
         if self.subcategory:
             text += " ({})".format(self.subcategory)
-        canvas.drawCentredString(self.width * 1.5, self._band_baseline("category"), text)
+        font_mm = self.fonts.styles["category"][1] * self.fonts.FONT_SCALE
+        canvas.drawCentredString(
+            self.width * 1.5, self._band_baseline(font_mm), text
+        )
         canvas.restoreState()
 
+    def _text_style(self):
+        """Body-text paragraph style, scaled by the card's font_scale."""
+        style = copy(self.fonts.paragraph_styles["text"])
+        if self.font_scale != 1.0:
+            style.fontSize *= self.font_scale
+            style.leading *= self.font_scale
+        return style
+
+    @staticmethod
+    def _is_divider(entry):
+        return isinstance(entry, dict) and list(entry.keys()) == ["divider"]
+
     def fill_frames(self, canvas):
+        text_style = self._text_style()
+
         # Title (heading on the back face)
         self.elements.append(self._get_title_paragraph())
 
@@ -334,30 +366,26 @@ class ItemCardLayout(CardLayout):
         # Space before the body text
         self.elements.append(Spacer(1 * mm, 1 * mm))
 
-        if type(self.description) == str:
-            self.elements.append(
-                Paragraph(self.description, self.fonts.paragraph_styles["text"])
-            )
+        description = self.description
+        if type(description) == str:
+            self.elements.append(Paragraph(description, text_style))
             return
-        if type(self.description) != list:
+        if type(description) != list:
             raise ValueError(
                 f"Item `{self.title}` description should be a `str` or `list`"
             )
 
-        for entry in self.description:
-            if type(entry) == str:
-                self.elements.append(
-                    Paragraph(entry, self.fonts.paragraph_styles["text"])
-                )
-            if type(entry) == dict:
-                for title, description in entry.items():
+        for entry in description:
+            if self._is_divider(entry):
+                self.elements.append(LineDivider(fill_color=self.border_color))
+            elif type(entry) == str:
+                self.elements.append(Paragraph(entry, text_style))
+            elif type(entry) == dict:
+                for title, body in entry.items():
                     text = f"<i><b>{title}.</b></i>"
-                    if description is not None:
-                        text += f" {description}"
-
-                    self.elements.append(
-                        Paragraph(text, self.fonts.paragraph_styles["text"])
-                    )
+                    if body is not None:
+                        text += f" {body}"
+                    self.elements.append(Paragraph(text, text_style))
 
     def _get_title_paragraph(self):
         return Paragraph(self.title, self.fonts.paragraph_styles["title"])

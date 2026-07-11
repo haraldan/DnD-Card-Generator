@@ -5,4 +5,4 @@ import pathlib
 # regardless of the current working directory (including inside the container).
 ASSET_DIR = pathlib.Path(__file__).parent.parent.resolve() / "assets"
 FONT_DIR = ASSET_DIR / "fonts"
-PLACEHOLDER_ITEM = ASSET_DIR / "placeholder_item.png"
+PLACEHOLDER_ITEM = ASSET_DIR / "D20.png"

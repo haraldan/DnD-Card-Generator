@@ -45,7 +45,7 @@
           <input class="f-subtitle" type="text" placeholder="Weapon (battleaxe), rare" />
         </label>
         <label>Colour
-          <input class="f-color" type="color" value="#b01a1a" />
+          <input class="f-color" type="color" value="#3a5a78" />
         </label>
         <label>Category
           <input class="f-category" type="text" placeholder="Weapon" />
@@ -54,6 +54,10 @@
           <input class="f-subcategory" type="text" placeholder="Battleaxe" />
         </label>
       </div>
+
+      <label class="fontsize">Text size
+        <input class="f-fontscale" type="range" min="0.7" max="1.6" step="0.05" value="1" />
+      </label>
 
       <div class="image-row">
         <img class="thumb" alt="" hidden />
@@ -72,6 +76,7 @@
           <span class="desc-add">
             <button class="add-text" type="button">+ Text</button>
             <button class="add-kv" type="button">+ Key/Value</button>
+            <button class="add-line" type="button">+ Line</button>
           </span>
         </div>
         <ul class="desc-rows"></ul>
@@ -90,6 +95,13 @@
     <li class="desc-row" data-type="kv">
       <input class="r-key" type="text" placeholder="Name" />
       <textarea class="r-value" rows="2" placeholder="Text (optional)"></textarea>
+      <button class="del-row danger" type="button" title="Remove row">&times;</button>
+    </li>
+  </template>
+
+  <template id="row-divider">
+    <li class="desc-row" data-type="divider">
+      <span class="divider-label">— horizontal line —</span>
       <button class="del-row danger" type="button" title="Remove row">&times;</button>
     </li>
   </template>

@@ -22,7 +22,7 @@ services:
       # The directory must be writable by the `user:` above.
       - ./data:/data
       # To use your own placeholder artwork, also mount it over the default:
-      # - ./my-placeholder.png:/app/assets/placeholder_item.png:ro
+      # - ./my-placeholder.png:/app/assets/D20.png:ro
 
     # environment:
       # Override the data location inside the container if you like:

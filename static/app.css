@@ -84,12 +84,17 @@ textarea { resize: vertical; }
 .filebtn { display: inline-block; padding: 0.45rem 0.8rem; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; color: var(--ink); font-size: inherit; }
 .filebtn:hover { background: #f0ece2; }
 
+.fontsize { flex-direction: row; align-items: center; gap: 0.6rem; margin: 0.7rem 0 0.2rem; }
+.fontsize input[type=range] { flex: 1; }
+
 .desc-head { display: flex; justify-content: space-between; align-items: center; margin: 0.4rem 0; font-size: 0.85rem; color: var(--muted); }
 .desc-add { display: flex; gap: 0.3rem; }
 .desc-rows { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
 .desc-row { display: flex; gap: 0.4rem; align-items: start; }
 .desc-row[data-type="kv"] .r-key { flex: 0 0 30%; }
 .desc-row textarea { flex: 1; }
+.desc-row[data-type="divider"] { align-items: center; }
+.divider-label { flex: 1; text-align: center; color: var(--muted); font-style: italic; font-size: 0.85rem; border-top: 2px solid var(--line); padding-top: 0.3rem; }
 
 .preview iframe { width: 100%; height: 70vh; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
 .errors { color: var(--accent); font-size: 0.85rem; margin: 0 0 0.5rem; }

@@ -74,7 +74,7 @@ class FreeFonts(Fonts):
         "subtitle": ("ScalySans", 1.5 * mm, "white"),
         "category": ("Universal Serif", 2.25 * mm, "black"),
         "subcategory": ("Universal Serif", 1.5 * mm, "black"),
-        "text": ("ScalySans", 1.5 * mm, "black"),
+        "text": ("ScalySans", 1.8 * mm, "black"),
         "artist": ("ScalySans", 1.5 * mm, "white"),
     }
 
@@ -107,7 +107,7 @@ class AccurateFonts(Fonts):
         "subtitle": ("ModestoTextLight", 1.5 * mm, "white"),
         "category": ("ModestoExpanded", 2.25 * mm, "black"),
         "subcategory": ("ModestoExpanded", 1.5 * mm, "black"),
-        "text": ("ModestoTextLight", 1.5 * mm, "black"),
+        "text": ("ModestoTextLight", 1.8 * mm, "black"),
         "artist": ("ModestoTextLight", 1.25 * mm, "white"),
     }
 
