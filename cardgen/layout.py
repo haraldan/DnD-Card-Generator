@@ -13,7 +13,7 @@ from .markdown_render import parse_markdown
 
 # Default frame/subtitle colour: a muted slate blue. Pleasant on screen and a
 # distinct mid-tone when printed in black and white.
-DEFAULT_COLOR = "#3a5a78"
+DEFAULT_COLOR = "#2f4a63"
 
 # Default body-text / subtitle size, in points.
 DEFAULT_FONT_SIZE = 8.0
@@ -328,10 +328,14 @@ class ItemCardLayout(CardLayout):
         canvas.restoreState()
 
     def _text_style(self):
-        """Body-text paragraph style at the card's font size (points)."""
+        """Body-text paragraph style at the card's font size (points). Vertical
+        spacing between blocks is driven entirely by blank lines (see
+        fill_frames), so the paragraph itself carries no space before/after."""
         style = copy(self.fonts.paragraph_styles["text"])
         style.fontSize = self.font_size
         style.leading = self.font_size * 1.2
+        style.spaceBefore = 0
+        style.spaceAfter = 0
         return style
 
     def _subtitle_style(self):
@@ -357,10 +361,20 @@ class ItemCardLayout(CardLayout):
         # Space before the body text
         self.elements.append(Spacer(1 * mm, 1 * mm))
 
-        # Description is authored as Markdown.
+        # Description is authored as Markdown. Each blank line becomes one fixed
+        # vertical gap, so spacing is consistent whether text or a rule follows.
         blocks = parse_markdown(self.description or "")
+        # Trim leading/trailing blank-line gaps.
+        while blocks and blocks[0][0] == "space":
+            blocks.pop(0)
+        while blocks and blocks[-1][0] == "space":
+            blocks.pop()
+
+        gap = self.font_size  # points per blank line
         for block in blocks:
-            if block[0] == "divider":
+            if block[0] == "space":
+                self.elements.append(Spacer(1, gap))
+            elif block[0] == "divider":
                 # Extend past the frame text padding so the rule reaches the
                 # card body edges (the coloured border).
                 self.elements.append(

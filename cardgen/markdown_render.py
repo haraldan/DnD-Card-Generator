@@ -9,7 +9,9 @@ Supported:
 Everything else is treated as literal text. Output is ReportLab's mini-XML
 (``<b>``/``<i>``/``<u>``/``<a href>``), suitable for a Paragraph.
 
-Blocks are returned as tuples: ``("divider",)`` or ``("text", xml)``.
+Blocks are returned as tuples: ``("text", xml)``, ``("divider",)`` or
+``("space",)``. Each blank line yields one ``("space",)`` so the caller can turn
+it into a consistent vertical gap regardless of what surrounds it.
 """
 import re
 
@@ -48,6 +50,7 @@ def parse_markdown(md: str):
         line = raw.strip()
         if line == "":
             flush()
+            blocks.append(("space",))
         elif _HR.match(line):
             flush()
             blocks.append(("divider",))

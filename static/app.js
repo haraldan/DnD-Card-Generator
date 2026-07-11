@@ -119,6 +119,10 @@ function buildCard(data) {
   if (data.color) node.querySelector(".f-color").value = normalizeColor(data.color);
   node.querySelector(".f-description").value = data.description || "";
   node.querySelector(".f-fontsize").value = data.font_size || 8;
+  node.querySelector(".reset-fontsize").addEventListener("click", () => {
+    node.querySelector(".f-fontsize").value = 8;
+    scheduleSave(node);
+  });
 
   if (data.has_image) showThumb(node);
 
@@ -152,7 +156,7 @@ function buildCard(data) {
 
 function normalizeColor(c) {
   // <input type=color> only accepts #rrggbb; leave hex as-is, otherwise default.
-  return /^#[0-9a-fA-F]{6}$/.test(c) ? c : "#3a5a78";
+  return /^#[0-9a-fA-F]{6}$/.test(c) ? c : "#2f4a63";
 }
 
 function findCardNode(id) {
@@ -202,7 +206,7 @@ async function loadCardIntoBuilder(id) {
 
 // ------------------------------------------------------------------ toolbar
 document.getElementById("add-card").addEventListener("click", () => {
-  const data = { id: uuid(), color: "#3a5a78", description: [] };
+  const data = { id: uuid(), color: "#2f4a63", description: [] };
   const node = buildCard(data);
   saveCard(node); // persist immediately so it appears in the library
   node.querySelector(".f-title").focus();
@@ -243,7 +247,7 @@ async function init() {
     buildCard(full);
   }
   if (cards.length === 0) {
-    buildCard({ id: uuid(), color: "#3a5a78", description: [] });
+    buildCard({ id: uuid(), color: "#2f4a63", description: [] });
   }
   refreshLibrary();
 }

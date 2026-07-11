@@ -83,7 +83,7 @@ entries = [
     {
         "title": "Vicious Battleaxe",
         "subtitle": "Weapon (battleaxe), rare",
-        "color": "#3a5a78",
+        "color": "#2f4a63",
         "description": (
             "1d8 slashing\n\n"
             "---\n\n"
@@ -112,7 +112,7 @@ Example YAML files are in the `example/` directory.
 
 - **title** — item name; shown centred in the front bottom band and as the heading on the back.
 - **subtitle** — text in the coloured band on the back (its background follows `color`); rendered at the same size as the body text.
-- **description** — a **Markdown** string. Supported: a single newline is a line break and a blank line starts a new paragraph; `---` is a full-width horizontal rule in the frame colour; plus `*italic*`, `**bold**`, `***bold italic***`, and `[text](url)` links.
+- **description** — a **Markdown** string. A single newline is a line break; **each blank line adds one consistent vertical gap** (whether text or a rule follows). `---` is a full-width horizontal rule in the frame colour. Also `*italic*`, `**bold**`, `***bold italic***`, and `[text](url)` links.
 - **color** — a colour name, hex code (e.g. `#4a4a4a`) or anything ReportLab accepts; drives the border and subtitle band. Defaults to a muted slate blue that also reads well in black and white.
 - **font_size** — optional body-text/subtitle size in points (default `8`). The subtitle uses the same size as the body text; the title is unaffected.
 - **image_path** — optional path to artwork; the image is scaled to cover the frame. Falls back to `assets/D20.png`.
