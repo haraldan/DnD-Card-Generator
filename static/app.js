@@ -159,15 +159,6 @@ function buildCard(data) {
     await uploadImage(node.dataset.id, file);
     showThumb(node);
   });
-  node.querySelector(".dup-card").addEventListener("click", async () => {
-    await saveCard(node); // flush pending edits so the copy is current
-    const res = await fetch(`/cards/${node.dataset.id}/duplicate`, { method: "POST" });
-    if (!res.ok) return;
-    const copy = buildCard(await res.json());
-    refreshLibrary();
-    copy.scrollIntoView({ behavior: "smooth", block: "center" });
-  });
-
   node.querySelector(".crop-btn").addEventListener("click", () => openCrop(node));
   node.querySelector(".del-image").addEventListener("click", async () => {
     await fetch(`/cards/${node.dataset.id}/image`, { method: "DELETE" });
@@ -199,8 +190,12 @@ async function refreshLibrary() {
     if (findCardNode(c.id)) li.classList.add("in-list");
     const a = document.createElement("a");
     a.textContent = c.title || "(untitled)";
-    a.title = "Add to the render list";
+    a.title = "Click to add to the render list · Right-click to duplicate";
     a.addEventListener("click", () => addToWorking(c.id));
+    a.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      duplicateCard(c.id);
+    });
     const del = document.createElement("button");
     del.className = "danger";
     del.textContent = "×";
@@ -239,13 +234,12 @@ async function updatePalette() {
         node.querySelector(".f-color").value = col;
         scheduleSave(node);
       });
-      if (!isDefault) {
-        b.addEventListener("contextmenu", async (e) => {
-          e.preventDefault();
-          await fetch(`/colors?color=${encodeURIComponent(col)}`, { method: "DELETE" });
-          updatePalette();
-        });
-      }
+      b.addEventListener("contextmenu", async (e) => {
+        e.preventDefault(); // never show the browser menu on a swatch
+        if (isDefault) return; // default colour can't be removed
+        await fetch(`/colors?color=${encodeURIComponent(col)}`, { method: "DELETE" });
+        updatePalette();
+      });
       box.appendChild(b);
     });
   });
@@ -265,6 +259,15 @@ async function addToWorking(id) {
     refreshLibrary();
   }
   node.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+// Duplicate a saved card (content + artwork) into a new card and load it.
+async function duplicateCard(id) {
+  const res = await fetch(`/cards/${id}/duplicate`, { method: "POST" });
+  if (!res.ok) return;
+  const copy = buildCard(await res.json());
+  refreshLibrary();
+  copy.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 // ------------------------------------------------------------------ toolbar
