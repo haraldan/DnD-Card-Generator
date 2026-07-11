@@ -15,6 +15,10 @@ COPY templates ./templates
 COPY static ./static
 COPY assets ./assets
 
+# Ensure assets (fonts, placeholder image) are world-readable so the app can
+# open them when the container runs as an arbitrary non-root user.
+RUN chmod -R a+rX /app/assets /app/static /app/templates
+
 # The app writes cards to CARDGEN_DATA_DIR (default /data). Mount a directory
 # there at run time and run as a user that owns it (docker run --user / compose
 # `user:`). The image intentionally does not create /data, declare a VOLUME, or

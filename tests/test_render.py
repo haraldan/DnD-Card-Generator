@@ -20,26 +20,24 @@ def _page_count(pdf_bytes):
 SMALL = {
     "title": "Vicious Battleaxe",
     "subtitle": "Weapon (battleaxe), rare",
-    "category": "Weapon",
-    "subcategory": "Battleaxe",
     "color": "#4a4a4a",
-    "description": [
+    "description": (
         "This axe is a magic weapon. When you roll a 20 on an attack roll made "
-        "with this weapon, the target takes an extra 7 (2d6) damage.",
-    ],
+        "with this weapon, the target takes an extra 7 (2d6) damage."
+    ),
 }
 
-# Exercises str, key:value, and empty-value dict (`Sticky:`) description rows.
-BADGE = {
-    "title": "Sticky Badge",
+# Exercises the Markdown features: paragraphs, a rule, bold-italic lead, link.
+MARKDOWN = {
+    "title": "Markdown Item",
     "subtitle": "Wondrous item, rare",
-    "category": "Wondrous item",
-    "subcategory": "Badge",
-    "description": [
-        "A plain string row.",
-        {"Proud": "You become unreasonably proud of your name."},
-        {"Sticky": None},
-    ],
+    "font_scale": 1.2,
+    "description": (
+        "1d12 slashing\n\n"
+        "---\n\n"
+        "*Note: see [the rules](https://example.com).*\n\n"
+        "***Heavy.*** Too large for a Small creature to use effectively."
+    ),
 }
 
 
@@ -49,9 +47,8 @@ def test_returns_pdf_bytes():
     assert pdf.startswith(b"%PDF")
 
 
-def test_description_row_forms():
-    # Should render without raising on all three description-row shapes.
-    pdf = render_item_cards([BADGE])
+def test_markdown_description_renders():
+    pdf = render_item_cards([MARKDOWN])
     assert pdf.startswith(b"%PDF")
 
 
@@ -77,9 +74,7 @@ def test_empty_input_yields_one_blank_page():
 
 def test_overflowing_card_reported_not_crashed():
     huge = dict(SMALL, title="Impossibly Long Tome")
-    huge["description"] = [
-        {f"Clause {i}": "word " * 400} for i in range(40)
-    ]
+    huge["description"] = "\n\n".join("word " * 400 for _ in range(40))
     options = RenderOptions()
     pdf = render_item_cards([huge], options)
     assert pdf.startswith(b"%PDF")

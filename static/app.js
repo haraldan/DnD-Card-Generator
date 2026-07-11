@@ -23,30 +23,13 @@ function uuid() {
 }
 
 function serializeCard(node) {
-  const id = node.dataset.id;
-  const rows = [];
-  node.querySelectorAll(".desc-row").forEach((row) => {
-    if (row.dataset.type === "divider") {
-      rows.push({ type: "divider" });
-    } else if (row.dataset.type === "kv") {
-      rows.push({
-        type: "kv",
-        key: row.querySelector(".r-key").value,
-        value: row.querySelector(".r-value").value,
-      });
-    } else {
-      rows.push({ type: "text", text: row.querySelector(".r-text").value });
-    }
-  });
   return {
-    id,
+    id: node.dataset.id,
     title: node.querySelector(".f-title").value,
     subtitle: node.querySelector(".f-subtitle").value,
-    category: node.querySelector(".f-category").value,
-    subcategory: node.querySelector(".f-subcategory").value,
     color: node.querySelector(".f-color").value,
     font_scale: parseFloat(node.querySelector(".f-fontscale").value) || 1.0,
-    description: rows,
+    description: node.querySelector(".f-description").value,
   };
 }
 
@@ -64,27 +47,6 @@ function scheduleSave(node) {
   const id = node.dataset.id;
   clearTimeout(saveTimers.get(id));
   saveTimers.set(id, setTimeout(() => saveCard(node), AUTOSAVE_MS));
-}
-
-// ------------------------------------------------------------------ rows
-function addRow(node, type, data) {
-  const tplId = type === "kv" ? "row-kv" : type === "divider" ? "row-divider" : "row-text";
-  const tpl = document.getElementById(tplId);
-  const row = tpl.content.firstElementChild.cloneNode(true);
-  if (data) {
-    if (type === "kv") {
-      row.querySelector(".r-key").value = data.key || "";
-      row.querySelector(".r-value").value = data.value || "";
-    } else if (type === "text") {
-      row.querySelector(".r-text").value = data.text || "";
-    }
-  }
-  row.querySelector(".del-row").addEventListener("click", () => {
-    row.remove();
-    scheduleSave(node);
-  });
-  node.querySelector(".desc-rows").appendChild(row);
-  return row;
 }
 
 // ------------------------------------------------------------------ images
@@ -154,20 +116,22 @@ function buildCard(data) {
   node.dataset.id = data.id;
   node.querySelector(".f-title").value = data.title || "";
   node.querySelector(".f-subtitle").value = data.subtitle || "";
-  node.querySelector(".f-category").value = data.category || "";
-  node.querySelector(".f-subcategory").value = data.subcategory || "";
   if (data.color) node.querySelector(".f-color").value = normalizeColor(data.color);
-  node.querySelector(".f-fontscale").value = data.font_scale || 1.0;
+  node.querySelector(".f-description").value = data.description || "";
 
-  (data.description || []).forEach((row) => addRow(node, row.type, row));
+  const fontscale = node.querySelector(".f-fontscale");
+  const fontval = node.querySelector(".fontsize-val");
+  fontscale.value = data.font_scale || 1.0;
+  const updateFontVal = () => {
+    fontval.textContent = Math.round(parseFloat(fontscale.value) * 100) + "%";
+  };
+  updateFontVal();
+  fontscale.addEventListener("input", updateFontVal);
+
   if (data.has_image) showThumb(node);
 
   // Live autosave on any field change
   node.addEventListener("input", () => scheduleSave(node));
-
-  node.querySelector(".add-text").addEventListener("click", () => { addRow(node, "text"); scheduleSave(node); });
-  node.querySelector(".add-kv").addEventListener("click", () => { addRow(node, "kv"); scheduleSave(node); });
-  node.querySelector(".add-line").addEventListener("click", () => { addRow(node, "divider"); scheduleSave(node); });
 
   node.querySelector(".del-card").addEventListener("click", async () => {
     await fetch(`/cards/${node.dataset.id}`, { method: "DELETE" });

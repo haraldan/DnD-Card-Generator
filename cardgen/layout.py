@@ -9,6 +9,7 @@ from reportlab.platypus.flowables import Spacer
 
 from .flowables import Border, LineDivider, TemplateTooSmall
 from .fonts import FreeFonts
+from .markdown_render import parse_markdown
 
 # Default frame/subtitle colour: a muted slate blue. Pleasant on screen and a
 # distinct mid-tone when printed in black and white.
@@ -30,7 +31,6 @@ class CardLayout:
         self,
         title,
         subtitle,
-        artist,
         image_path,
         border_color=DEFAULT_COLOR,
         border_front=(0, 0, 0, 0),  # uninitialized
@@ -43,7 +43,6 @@ class CardLayout:
         self.frames = []
         self.title = title
         self.subtitle = subtitle
-        self.artist = artist
         self.fonts = fonts if fonts is not None else FreeFonts()
         self.border_color = border_color
         self.border_front = tuple([v + bleed for v in border_front])
@@ -193,8 +192,10 @@ class SmallCard(CardLayout):
         self,
         width=CardLayout.BASE_WIDTH,
         height=CardLayout.BASE_HEIGHT,
+        # Front keeps a thick bottom band for the item name; the text side has a
+        # uniform thin border on all sides (no footer).
         border_front=(2.5 * mm, 2.5 * mm, 7.5 * mm, 2.5 * mm),
-        border_back=(2.5 * mm, 2.5 * mm, 7.5 * mm, 2.5 * mm),
+        border_back=(2.5 * mm, 2.5 * mm, 2.5 * mm, 2.5 * mm),
         **kwargs,
     ):
         super().__init__(
@@ -224,7 +225,7 @@ class LargeCard(CardLayout):
         width=CardLayout.BASE_WIDTH * 2,
         height=CardLayout.BASE_HEIGHT,
         border_front=(3.5 * mm, 3.5 * mm, 7.5 * mm, 3.5 * mm),
-        border_back=(3.5 * mm, 3.5 * mm, 7.5 * mm, 3.5 * mm),
+        border_back=(3.5 * mm, 3.5 * mm, 3.5 * mm, 3.5 * mm),
         **kwargs,
     ):
         super().__init__(
@@ -292,17 +293,12 @@ class ItemCardLayout(CardLayout):
         self,
         title,
         subtitle,
-        artist,
         image_path,
-        category,
-        subcategory,
         description,
         font_scale=1.0,
         **kwargs,
     ):
-        super().__init__(title, subtitle, artist, image_path, **kwargs)
-        self.category = category
-        self.subcategory = subcategory
+        super().__init__(title, subtitle, image_path, **kwargs)
         self.description = description
         self.font_scale = font_scale or 1.0
 
@@ -313,6 +309,8 @@ class ItemCardLayout(CardLayout):
         return self.bleed + (self.BOTTOM_BAND - cap) / 2
 
     def _draw_front_label(self, canvas):
+        # Item name, centred in the front bottom band. The title font is NOT
+        # affected by font_scale — only its length-based auto-shrink.
         if not self.title:
             return
         canvas.saveState()
@@ -325,21 +323,6 @@ class ItemCardLayout(CardLayout):
         )
         canvas.restoreState()
 
-    def _draw_back(self, canvas):
-        super()._draw_back(canvas)
-
-        canvas.saveState()
-        canvas.setFillColor("white")
-        self.fonts.set_font(canvas, "category")
-        text = self.category or ""
-        if self.subcategory:
-            text += " ({})".format(self.subcategory)
-        font_mm = self.fonts.styles["category"][1] * self.fonts.FONT_SCALE
-        canvas.drawCentredString(
-            self.width * 1.5, self._band_baseline(font_mm), text
-        )
-        canvas.restoreState()
-
     def _text_style(self):
         """Body-text paragraph style, scaled by the card's font_scale."""
         style = copy(self.fonts.paragraph_styles["text"])
@@ -348,44 +331,37 @@ class ItemCardLayout(CardLayout):
             style.leading *= self.font_scale
         return style
 
-    @staticmethod
-    def _is_divider(entry):
-        return isinstance(entry, dict) and list(entry.keys()) == ["divider"]
+    def _subtitle_style(self):
+        """Subtitle style: coloured band following the card colour, scaled by
+        font_scale to stay consistent with the body text. The coloured band
+        grows with the text because it is the paragraph's backColor."""
+        style = copy(self.fonts.paragraph_styles["subtitle"])
+        style.backColor = self.border_color
+        if self.font_scale != 1.0:
+            style.fontSize *= self.font_scale
+            style.leading *= self.font_scale
+        return style
 
     def fill_frames(self, canvas):
         text_style = self._text_style()
 
-        # Title (heading on the back face)
+        # Title heading on the back face (fixed size)
         self.elements.append(self._get_title_paragraph())
 
-        # Subtitle band — colour follows the card's border colour
-        subtitle_style = copy(self.fonts.paragraph_styles["subtitle"])
-        subtitle_style.backColor = self.border_color
-        self.elements.append(Paragraph(self.subtitle, subtitle_style))
+        # Subtitle band (scales with body text; colour follows the card colour)
+        if self.subtitle:
+            self.elements.append(Paragraph(self.subtitle, self._subtitle_style()))
 
         # Space before the body text
         self.elements.append(Spacer(1 * mm, 1 * mm))
 
-        description = self.description
-        if type(description) == str:
-            self.elements.append(Paragraph(description, text_style))
-            return
-        if type(description) != list:
-            raise ValueError(
-                f"Item `{self.title}` description should be a `str` or `list`"
-            )
-
-        for entry in description:
-            if self._is_divider(entry):
+        # Description is authored as Markdown.
+        blocks = parse_markdown(self.description or "")
+        for block in blocks:
+            if block[0] == "divider":
                 self.elements.append(LineDivider(fill_color=self.border_color))
-            elif type(entry) == str:
-                self.elements.append(Paragraph(entry, text_style))
-            elif type(entry) == dict:
-                for title, body in entry.items():
-                    text = f"<i><b>{title}.</b></i>"
-                    if body is not None:
-                        text += f" {body}"
-                    self.elements.append(Paragraph(text, text_style))
+            else:
+                self.elements.append(Paragraph(block[1], text_style))
 
     def _get_title_paragraph(self):
         return Paragraph(self.title, self.fonts.paragraph_styles["title"])

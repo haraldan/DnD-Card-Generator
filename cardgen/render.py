@@ -71,11 +71,8 @@ def _entry_to_kwargs(entry, options):
     return {
         "title": clean.get("title", ""),
         "subtitle": clean.get("subtitle", ""),
-        "artist": clean.get("artist", None),
         "image_path": resolve_image(clean),
-        "category": clean.get("category", ""),
-        "subcategory": clean.get("subcategory", None),
-        "description": clean.get("description", []),
+        "description": clean.get("description", ""),
         "border_color": clean.get("color") or DEFAULT_COLOR,
         "font_scale": float(clean.get("font_scale", 1.0) or 1.0),
         "bleed": options.bleed_mm * mm,

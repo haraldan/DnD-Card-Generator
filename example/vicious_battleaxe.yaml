@@ -1,8 +1,10 @@
 - title: Vicious Battleaxe
   subtitle: Weapon (battleaxe), rare
-  artist: ''
-  description:
-    - This axe is a magic weapon. When you roll a 20 on an attack roll made with this weapon, the target takes an extra 7 (2d6) damage.
-  category: Weapon
-  subcategory: Battleaxe
-  color: "#4a4a4a"
+  color: "#3a5a78"
+  description: |-
+    1d8 slashing
+
+    ---
+
+    This axe is a magic weapon. When you roll a 20 on an attack roll made with
+    this weapon, the target takes an extra 7 (2d6) damage.

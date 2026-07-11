@@ -34,11 +34,19 @@ and reloaded next time.
 - Images are optional (a placeholder is used otherwise) and can be cropped to the
   card's aspect ratio in the browser before upload.
 
-### Build and publish the image
+### Image publishing (GHCR)
+
+A GitHub Actions workflow (`.github/workflows/docker-publish.yml`) builds and
+pushes the image to the GitHub Container Registry on every push to `master`:
 
 ```
-docker build -t yourdockerhubname/dnd-item-card-generator:latest .
-docker push yourdockerhubname/dnd-item-card-generator:latest
+ghcr.io/<owner>/<repo>:latest
+```
+
+To build locally instead:
+
+```
+docker build -t ghcr.io/<owner>/<repo>:latest .
 ```
 
 ### Run it
@@ -50,7 +58,7 @@ directory and make sure that directory is writable by it:
 docker run -d -p 8000:8000 \
   --user 1000:1000 \
   -v /path/to/your/carddata:/data \
-  yourdockerhubname/dnd-item-card-generator:latest
+  ghcr.io/<owner>/<repo>:latest
 ```
 
 Or with compose — see `docker-compose.yml`, which shows the `user:` and volume
@@ -75,13 +83,13 @@ entries = [
     {
         "title": "Vicious Battleaxe",
         "subtitle": "Weapon (battleaxe), rare",
-        "category": "Weapon",
-        "subcategory": "Battleaxe",
-        "color": "#4a4a4a",
-        "description": [
+        "color": "#3a5a78",
+        "description": (
+            "1d8 slashing\n\n"
+            "---\n\n"
             "This axe is a magic weapon. When you roll a 20 on an attack roll "
-            "made with this weapon, the target takes an extra 7 (2d6) damage.",
-        ],
+            "made with this weapon, the target takes an extra 7 (2d6) damage."
+        ),
     },
 ]
 
@@ -103,13 +111,11 @@ Example YAML files are in the `example/` directory.
 ## Card fields (YAML / entry dict)
 
 - **title** — item name; shown centred in the front bottom band and as the heading on the back.
-- **subtitle** — text in the coloured band on the back (its background follows `color`).
-- **category** / **subcategory** — the item type, shown centred in the back bottom band as `Category (Subcategory)`.
-- **description** — a string, or a list whose entries are: strings (a text paragraph), single-key `{name: text}` dicts (a bold-lead paragraph; the value may be omitted), or `{divider: true}` for a thin horizontal rule in the frame colour.
+- **subtitle** — text in the coloured band on the back (its background follows `color`); scales with `font_scale`.
+- **description** — a **Markdown** string. Supported: blank-line separated paragraphs, `---` for a horizontal rule in the frame colour, `*italic*`, `**bold**`, `***bold italic***`, and `[text](url)` links.
 - **color** — a colour name, hex code (e.g. `#4a4a4a`) or anything ReportLab accepts; drives the border and subtitle band. Defaults to a muted slate blue that also reads well in black and white.
-- **font_scale** — optional multiplier for the body-text size (default `1.0`; e.g. `1.3` for larger text).
+- **font_scale** — optional multiplier for the body-text and subtitle size (default `1.0`; e.g. `1.3` for larger text). Does not affect the title.
 - **image_path** — optional path to artwork; the image is scaled to cover the frame. Falls back to `assets/D20.png`.
-- **artist** — optional; currently unused by the renderer.
 
 ## Fonts
 
