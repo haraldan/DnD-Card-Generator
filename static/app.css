@@ -95,6 +95,7 @@ textarea { resize: vertical; }
 .errors { color: var(--accent); font-size: 0.85rem; margin: 0 0 0.5rem; }
 
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: flex; align-items: center; justify-content: center; z-index: 20; }
+.modal[hidden] { display: none; }
 .modal-box { background: var(--panel); border-radius: 8px; padding: 1rem; max-width: 90vw; }
 .crop-stage { max-width: 80vw; max-height: 70vh; }
 .crop-stage img { max-width: 100%; display: block; }
