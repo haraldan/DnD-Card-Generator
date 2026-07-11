@@ -245,6 +245,18 @@ async function updatePalette() {
   });
 }
 
+// Briefly highlight an element to make a value change visible.
+function flash(el) {
+  el.animate(
+    [
+      { backgroundColor: "#ffd666", transform: "scale(1.25)" },
+      { backgroundColor: "#ffd666", transform: "scale(1.25)", offset: 0.15 },
+      { backgroundColor: "", transform: "scale(1)" },
+    ],
+    { duration: 650, easing: "ease-out" }
+  );
+}
+
 // Add a saved card to the working list, or bump its copies if already there.
 async function addToWorking(id) {
   await fetch(`/working/${id}`, { method: "POST" });
@@ -252,6 +264,7 @@ async function addToWorking(id) {
   if (node) {
     const f = node.querySelector(".f-copies");
     f.value = (parseInt(f.value) || 1) + 1;
+    flash(f);
   } else {
     const res = await fetch(`/cards/${id}`);
     if (!res.ok) return;
