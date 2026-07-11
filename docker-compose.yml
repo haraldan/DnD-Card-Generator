@@ -1,18 +1,33 @@
+# Reference compose file.
+#
+# For local building/testing this works as-is once ./data exists and is owned
+# by the user set in `user:` below. For a real deployment (e.g. TrueNAS), use
+# the published image, point the volume at your own dataset, and set `user:` to
+# a user/group that owns that dataset.
 services:
   cardgen:
     build: .
-    # Run as the host user so files written to the ./data bind-mount are owned
-    # by you and stay editable on the host. Defaults to 1000:1000; override for
-    # a different host user with: UID=$(id -u) GID=$(id -g) docker compose up
-    user: "${UID:-1000}:${GID:-1000}"
+    # For deployment, replace `build: .` with your published image:
+    # image: yourdockerhubname/dnd-item-card-generator:latest
+
+    # Run as a user/group that owns the mounted data directory. The image does
+    # not set a user, so choose one here (numeric uid:gid is simplest).
+    user: "1000:1000"
+
     ports:
       - "8000:8000"
+
     volumes:
-      # Persisted cards + images. Directly readable/editable on the host.
+      # host path : container path. Point the left side at your own storage.
+      # The directory must be writable by the `user:` above.
       - ./data:/data
-      # To use your own placeholder artwork, uncomment and point at your file:
+      # To use your own placeholder artwork, also mount it over the default:
       # - ./my-placeholder.png:/app/assets/placeholder_item.png:ro
+
     # environment:
+      # Override the data location inside the container if you like:
+      # - CARDGEN_DATA_DIR=/data
       # Enable an (external) AI image provider once one is implemented:
       # - CARDGEN_IMAGE_PROVIDER=
+
     restart: unless-stopped

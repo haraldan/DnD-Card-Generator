@@ -23,26 +23,41 @@ This is a fork focused solely on item cards. Compared to the original
 
 ## Web app (Docker)
 
-The easiest way to use it. Cards you create are autosaved as YAML into a
-host-mounted `./data` directory and reloaded next time.
+The app serves a browser GUI on port 8000. Cards you create are autosaved as
+YAML into `CARDGEN_DATA_DIR` (default `/data`), which you mount from the host,
+and reloaded next time.
 
-```
-docker compose up --build
-```
-
-Then open <http://localhost:8000>. Build cards in the form on the left, click
-**Preview** to see the A4 PDF inline, and **Download A4 PDF** to save it.
-
-- Every edit autosaves to `./data/cards/<id>.yaml`; uploaded artwork goes to
-  `./data/images/<id>.<ext>`. Both are plain files you can edit or back up on the
+- Every edit autosaves to `<data>/cards/<id>.yaml`; uploaded artwork goes to
+  `<data>/images/<id>.<ext>`. Both are plain files you can edit or back up on the
   host, and they survive container restarts.
 - The **Library** panel lists saved cards; click one to reload it.
 - Images are optional (a placeholder is used otherwise) and can be cropped to the
   card's aspect ratio in the browser before upload.
 
-To swap the placeholder artwork, bind-mount your own over
-`/app/assets/placeholder_item.png` (see the commented line in
-`docker-compose.yml`).
+### Build and publish the image
+
+```
+docker build -t yourdockerhubname/dnd-item-card-generator:latest .
+docker push yourdockerhubname/dnd-item-card-generator:latest
+```
+
+### Run it
+
+The image does **not** bake in a user. Pick a user/group that owns your data
+directory and make sure that directory is writable by it:
+
+```
+docker run -d -p 8000:8000 \
+  --user 1000:1000 \
+  -v /path/to/your/carddata:/data \
+  yourdockerhubname/dnd-item-card-generator:latest
+```
+
+Or with compose — see `docker-compose.yml`, which shows the `user:` and volume
+you need to set. Then open <http://localhost:8000>.
+
+To swap the placeholder artwork, also mount your own over
+`/app/assets/placeholder_item.png` (read-only).
 
 ### Running the web app without Docker
 
