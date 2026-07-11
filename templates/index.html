@@ -50,8 +50,8 @@
       </div>
 
       <label class="fontsize">Text size
-        <input class="f-fontscale" type="range" min="0.7" max="1.6" step="0.05" value="1" />
-        <span class="fontsize-val">100%</span>
+        <input class="f-fontscale" type="number" min="0.5" max="3" step="0.1" value="1" />
+        <span class="muted">&times; (1.0 = default)</span>
       </label>
 
       <div class="image-row">
@@ -68,7 +68,7 @@
       <div class="desc">
         <div class="desc-head">
           <span>Description</span>
-          <span class="muted">Markdown: <code>---</code> line, <code>*italic*</code>, <code>**bold**</code>, <code>***bold italic***</code>, <code>[text](url)</code></span>
+          <span class="muted">Markdown: Enter = line break, blank line = paragraph, <code>---</code> rule, <code>*italic*</code>, <code>**bold**</code>, <code>***bold italic***</code>, <code>[text](url)</code></span>
         </div>
         <textarea class="f-description" rows="12" placeholder="Describe the item using Markdown&#10;&#10;---&#10;&#10;**Property.** Text..."></textarea>
       </div>

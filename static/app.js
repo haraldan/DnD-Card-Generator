@@ -118,15 +118,7 @@ function buildCard(data) {
   node.querySelector(".f-subtitle").value = data.subtitle || "";
   if (data.color) node.querySelector(".f-color").value = normalizeColor(data.color);
   node.querySelector(".f-description").value = data.description || "";
-
-  const fontscale = node.querySelector(".f-fontscale");
-  const fontval = node.querySelector(".fontsize-val");
-  fontscale.value = data.font_scale || 1.0;
-  const updateFontVal = () => {
-    fontval.textContent = Math.round(parseFloat(fontscale.value) * 100) + "%";
-  };
-  updateFontVal();
-  fontscale.addEventListener("input", updateFontVal);
+  node.querySelector(".f-fontscale").value = data.font_scale || 1.0;
 
   if (data.has_image) showThumb(node);
 

@@ -19,13 +19,15 @@ class TemplateTooSmall(Exception):
 
 
 class LineDivider(Flowable):
-    """A thin horizontal rule that spans the full width of its frame, drawn in
-    the card's border colour. Used to visually separate description sections."""
+    """A thin horizontal rule drawn in the card's border colour to separate
+    description sections. It extends past the frame's text padding by `extend`
+    on each side so it reaches the card body edges (the coloured border)."""
 
-    def __init__(self, fill_color="black", line_height=0.35 * mm, spacing=1.2 * mm):
+    def __init__(self, fill_color="black", line_height=0.35 * mm, spacing=1.2 * mm, extend=0):
         self.fill_color = fill_color
         self.line_height = line_height
         self.spacing = spacing
+        self.extend = extend
         self.width = 0
         self.height = line_height + spacing
 
@@ -36,7 +38,14 @@ class LineDivider(Flowable):
     def draw(self):
         canvas = self.canv
         canvas.setFillColor(self.fill_color)
-        canvas.rect(0, self.spacing / 2, self.width, self.line_height, stroke=0, fill=1)
+        canvas.rect(
+            -self.extend,
+            self.spacing / 2,
+            self.width + 2 * self.extend,
+            self.line_height,
+            stroke=0,
+            fill=1,
+        )
 
 
 def get_image_size(path, available_width, available_height):

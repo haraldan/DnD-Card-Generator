@@ -359,7 +359,11 @@ class ItemCardLayout(CardLayout):
         blocks = parse_markdown(self.description or "")
         for block in blocks:
             if block[0] == "divider":
-                self.elements.append(LineDivider(fill_color=self.border_color))
+                # Extend past the frame text padding so the rule reaches the
+                # card body edges (the coloured border).
+                self.elements.append(
+                    LineDivider(fill_color=self.border_color, extend=self.TEXT_MARGIN)
+                )
             else:
                 self.elements.append(Paragraph(block[1], text_style))
 

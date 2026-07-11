@@ -84,9 +84,8 @@ textarea { resize: vertical; }
 .filebtn { display: inline-block; padding: 0.45rem 0.8rem; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; color: var(--ink); font-size: inherit; }
 .filebtn:hover { background: #f0ece2; }
 
-.fontsize { flex-direction: row; align-items: center; gap: 0.6rem; margin: 0.7rem 0 0.2rem; }
-.fontsize input[type=range] { flex: 1; }
-.fontsize-val { flex: 0 0 3.2em; text-align: right; color: var(--ink); font-variant-numeric: tabular-nums; }
+.fontsize { flex-direction: row; align-items: center; gap: 0.5rem; margin: 0.7rem 0 0.2rem; }
+.fontsize input[type=number] { width: 5rem; }
 
 .desc-head { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; margin: 0.4rem 0; font-size: 0.85rem; color: var(--muted); flex-wrap: wrap; }
 .desc-head code { background: #ece7db; padding: 0 3px; border-radius: 3px; font-size: 0.9em; }

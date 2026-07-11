@@ -37,9 +37,11 @@ def parse_markdown(md: str):
 
     def flush():
         if paragraph:
-            text = " ".join(line.strip() for line in paragraph).strip()
-            if text:
-                blocks.append(("text", _inline(text)))
+            # A single newline within a block is a hard line break; a blank
+            # line (which triggers a flush) starts a new paragraph.
+            html = "<br/>".join(_inline(line.strip()) for line in paragraph)
+            if html:
+                blocks.append(("text", html))
             paragraph.clear()
 
     for raw in (md or "").replace("\r\n", "\n").split("\n"):

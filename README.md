@@ -112,7 +112,7 @@ Example YAML files are in the `example/` directory.
 
 - **title** — item name; shown centred in the front bottom band and as the heading on the back.
 - **subtitle** — text in the coloured band on the back (its background follows `color`); scales with `font_scale`.
-- **description** — a **Markdown** string. Supported: blank-line separated paragraphs, `---` for a horizontal rule in the frame colour, `*italic*`, `**bold**`, `***bold italic***`, and `[text](url)` links.
+- **description** — a **Markdown** string. Supported: a single newline is a line break and a blank line starts a new paragraph; `---` is a full-width horizontal rule in the frame colour; plus `*italic*`, `**bold**`, `***bold italic***`, and `[text](url)` links.
 - **color** — a colour name, hex code (e.g. `#4a4a4a`) or anything ReportLab accepts; drives the border and subtitle band. Defaults to a muted slate blue that also reads well in black and white.
 - **font_scale** — optional multiplier for the body-text and subtitle size (default `1.0`; e.g. `1.3` for larger text). Does not affect the title.
 - **image_path** — optional path to artwork; the image is scaled to cover the frame. Falls back to `assets/D20.png`.
