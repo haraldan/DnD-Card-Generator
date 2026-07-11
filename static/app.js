@@ -294,17 +294,23 @@ document.getElementById("add-card").addEventListener("click", async () => {
 });
 
 async function renderTo(url, disposition) {
-  const cards = Array.from(builder.querySelectorAll(".card-editor")).map(serializeCard);
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ cards }),
-  });
-  const errs = res.headers.get("X-Card-Errors");
-  previewErrors.hidden = !errs;
-  if (errs) previewErrors.textContent = "Could not fit: " + errs;
-  const blob = await res.blob();
-  return URL.createObjectURL(blob);
+  const busy = document.getElementById("busy");
+  busy.hidden = false;
+  try {
+    const cards = Array.from(builder.querySelectorAll(".card-editor")).map(serializeCard);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cards }),
+    });
+    const errs = res.headers.get("X-Card-Errors");
+    previewErrors.hidden = !errs;
+    if (errs) previewErrors.textContent = "Could not fit: " + errs;
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
+  } finally {
+    busy.hidden = true;
+  }
 }
 
 document.getElementById("preview").addEventListener("click", async () => {

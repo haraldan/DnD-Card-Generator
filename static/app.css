@@ -30,7 +30,19 @@ body {
   top: 0;
   z-index: 5;
 }
-.toolbar-actions { display: flex; gap: 0.5rem; }
+.toolbar-actions { display: flex; gap: 0.5rem; align-items: center; }
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.spinner[hidden] { display: none; }
+@keyframes spin { to { transform: rotate(360deg); } }
 /* Add-card button matches the Library column width and left alignment. */
 #add-card { width: var(--sidebar); }
 
