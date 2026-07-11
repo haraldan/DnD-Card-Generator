@@ -159,6 +159,15 @@ function buildCard(data) {
     await uploadImage(node.dataset.id, file);
     showThumb(node);
   });
+  node.querySelector(".dup-card").addEventListener("click", async () => {
+    await saveCard(node); // flush pending edits so the copy is current
+    const res = await fetch(`/cards/${node.dataset.id}/duplicate`, { method: "POST" });
+    if (!res.ok) return;
+    const copy = buildCard(await res.json());
+    refreshLibrary();
+    copy.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+
   node.querySelector(".crop-btn").addEventListener("click", () => openCrop(node));
   node.querySelector(".del-image").addEventListener("click", async () => {
     await fetch(`/cards/${node.dataset.id}/image`, { method: "DELETE" });
@@ -217,16 +226,26 @@ async function updatePalette() {
   builder.querySelectorAll(".card-editor").forEach((node) => {
     const box = node.querySelector(".swatches");
     box.innerHTML = "";
-    colors.forEach((col) => {
+    colors.forEach((col, i) => {
+      const isDefault = i === 0; // the default colour is always first
       const b = document.createElement("button");
       b.type = "button";
       b.className = "swatch";
       b.style.background = col;
-      b.title = col;
+      b.title = isDefault
+        ? `${col} (default)`
+        : `${col} — click to use, right-click to remove`;
       b.addEventListener("click", () => {
         node.querySelector(".f-color").value = col;
         scheduleSave(node);
       });
+      if (!isDefault) {
+        b.addEventListener("contextmenu", async (e) => {
+          e.preventDefault();
+          await fetch(`/colors?color=${encodeURIComponent(col)}`, { method: "DELETE" });
+          updatePalette();
+        });
+      }
       box.appendChild(b);
     });
   });

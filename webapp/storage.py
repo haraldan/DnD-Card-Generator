@@ -13,6 +13,7 @@ is a real UUID, so a request can never escape the data directory.
 import logging
 import os
 import pathlib
+import shutil
 import tempfile
 import uuid
 
@@ -25,6 +26,8 @@ CARDS_DIR = DATA_DIR / "cards"
 IMAGES_DIR = DATA_DIR / "images"
 # Ordered list of card ids currently loaded for rendering (the "working list").
 WORKING_FILE = DATA_DIR / "working.yaml"
+# Persistent, user-curated colour palette.
+PALETTE_FILE = DATA_DIR / "colors.yaml"
 
 _ALLOWED_IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
 
@@ -63,6 +66,16 @@ def image_file(card_id: str):
         if p.exists():
             return p
     return None
+
+
+def copy_image(src_id: str, dst_id: str):
+    """Copy a card's stored image to another card id (used when duplicating)."""
+    src = image_file(src_id)
+    if src is None:
+        return
+    dst = IMAGES_DIR / f"{_valid_id(dst_id)}{src.suffix}"
+    IMAGES_DIR.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(src, dst)
 
 
 def save_image(card_id: str, ext: str, data: bytes) -> pathlib.Path:
@@ -227,8 +240,9 @@ def list_cards():
     return cards
 
 
-def used_colors():
-    """Distinct card colours across all saved cards, most-used first."""
+def _used_colors():
+    """Distinct card colours across all saved cards, most-used first (used to
+    seed the palette on first run)."""
     counts = {}
     for path in CARDS_DIR.glob("*.yaml"):
         try:
@@ -240,6 +254,42 @@ def used_colors():
         if color:
             counts[color] = counts.get(color, 0) + 1
     return [c for c, _ in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))]
+
+
+# ------------------------------------------------------------- colour palette
+def load_palette():
+    """The persistent, user-curated colour palette. Seeded from existing card
+    colours the first time it is accessed."""
+    if PALETTE_FILE.exists():
+        try:
+            with open(PALETTE_FILE, "r") as f:
+                data = yaml.safe_load(f) or []
+            return [c for c in data if isinstance(c, str)]
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Unreadable palette: %s", exc)
+            return []
+    seeded = _used_colors()
+    _save_palette(seeded)
+    return seeded
+
+
+def _save_palette(colors):
+    _atomic_write(PALETTE_FILE, yaml.safe_dump(list(colors), sort_keys=False))
+
+
+def add_color(color: str):
+    if not color:
+        return
+    palette = load_palette()
+    if color not in palette:
+        palette.append(color)
+        _save_palette(palette)
+
+
+def remove_color(color: str):
+    palette = load_palette()
+    if color in palette:
+        _save_palette([c for c in palette if c != color])
 
 
 def entry_for_render(card: dict) -> dict:

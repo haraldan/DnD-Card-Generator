@@ -36,9 +36,11 @@ and reloaded next time.
   working list (clicking again increases its **Copies**); a card's **×** removes
   it from the working list but keeps it saved; the Library's **×** deletes it
   permanently.
-- Each card has a **Copies** count so the same card can be printed multiple times.
-- The colour picker shows swatches of colours already used by other cards for
-  quick reuse.
+- Each card has a **Copies** count so the same card can be printed multiple times,
+  and a **Duplicate** button that copies it (content and artwork) to a new card.
+- The colour picker keeps a **persistent palette** (`<data>/colors.yaml`) of the
+  colours you've chosen; click a swatch to reuse one, right-click to remove it.
+  The default colour is always available.
 - Images are optional (a placeholder is used otherwise) and can be cropped to the
   card's aspect ratio in the browser before upload.
 

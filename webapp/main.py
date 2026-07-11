@@ -1,7 +1,7 @@
-import io
 import logging
 import mimetypes
 import pathlib
+import uuid
 from typing import List
 
 from fastapi import FastAPI, HTTPException, UploadFile, File
@@ -70,9 +70,15 @@ def list_cards():
 
 @app.get("/colors")
 def colors():
-    # Always offer the default colour first, then the ones already in use.
-    used = storage.used_colors()
-    return [DEFAULT_COLOR] + [c for c in used if c != DEFAULT_COLOR]
+    # The default colour is always offered first and can't be removed.
+    palette = storage.load_palette()
+    return [DEFAULT_COLOR] + [c for c in palette if c != DEFAULT_COLOR]
+
+
+@app.delete("/colors")
+def delete_color(color: str):
+    storage.remove_color(color)
+    return {"ok": True}
 
 
 @app.get("/cards/{card_id}")
@@ -88,7 +94,25 @@ def get_card(card_id: str):
 def put_card(card_id: str, card: CardIn):
     _valid_id_or_404(card_id)
     storage.save_card(card_id, to_native(card))
+    if card.color:
+        storage.add_color(card.color)  # remember chosen colours in the palette
     return {"ok": True, "has_image": storage.image_file(card_id) is not None}
+
+
+@app.post("/cards/{card_id}/duplicate")
+def duplicate_card(card_id: str):
+    _valid_id_or_404(card_id)
+    src = storage.load_card(card_id)
+    if src is None:
+        raise HTTPException(status_code=404, detail="card not found")
+    new_id = str(uuid.uuid4())
+    storage.copy_image(card_id, new_id)  # copy artwork first
+    entry = {k: v for k, v in src.items() if not k.startswith("_")}
+    if entry.get("title"):
+        entry["title"] = f"{entry['title']} (copy)"
+    storage.save_card(new_id, entry)
+    storage.add_working(new_id)
+    return {**to_browser(storage.load_card(new_id)), "copies": 1}
 
 
 @app.delete("/cards/{card_id}")
