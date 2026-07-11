@@ -38,7 +38,10 @@
     <article class="card-editor" data-id="">
       <div class="card-editor-head">
         <input class="f-title" type="text" placeholder="Item name" aria-label="Item name" />
-        <button class="del-card danger" type="button" title="Delete card">&times;</button>
+        <label class="copies" title="How many times this card is rendered">Copies
+          <input class="f-copies" type="number" min="1" step="1" value="1" />
+        </label>
+        <button class="del-card danger" type="button" title="Remove from list">&times;</button>
       </div>
       <div class="grid2">
         <label>Subtitle
@@ -46,6 +49,7 @@
         </label>
         <label>Colour
           <input class="f-color" type="color" value="#2f4a63" />
+          <span class="swatches" title="Colours used by other cards"></span>
         </label>
       </div>
 

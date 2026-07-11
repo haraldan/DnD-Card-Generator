@@ -30,7 +30,17 @@ function serializeCard(node) {
     color: node.querySelector(".f-color").value,
     font_size: parseFloat(node.querySelector(".f-fontsize").value) || 8,
     description: node.querySelector(".f-description").value,
+    copies: parseInt(node.querySelector(".f-copies").value) || 1,
   };
+}
+
+async function saveCopies(node) {
+  const copies = parseInt(node.querySelector(".f-copies").value) || 1;
+  await fetch(`/working/${node.dataset.id}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ copies }),
+  });
 }
 
 async function saveCard(node) {
@@ -124,13 +134,19 @@ function buildCard(data) {
     scheduleSave(node);
   });
 
+  const copies = node.querySelector(".f-copies");
+  copies.value = data.copies || 1;
+  copies.addEventListener("change", () => saveCopies(node));
+
   if (data.has_image) showThumb(node);
 
-  // Live autosave on any field change
+  // Live autosave of card fields on any change
   node.addEventListener("input", () => scheduleSave(node));
 
+  // The card's × removes it from the working list only (it stays saved on disk
+  // and in the Library).
   node.querySelector(".del-card").addEventListener("click", async () => {
-    await fetch(`/cards/${node.dataset.id}`, { method: "DELETE" });
+    await fetch(`/working/${node.dataset.id}`, { method: "DELETE" });
     node.remove();
     refreshLibrary();
   });
@@ -171,16 +187,18 @@ async function refreshLibrary() {
   libraryEmpty.hidden = cards.length > 0;
   cards.forEach((c) => {
     const li = document.createElement("li");
+    if (findCardNode(c.id)) li.classList.add("in-list");
     const a = document.createElement("a");
     a.textContent = c.title || "(untitled)";
-    a.title = c.title || "(untitled)";
-    a.addEventListener("click", () => loadCardIntoBuilder(c.id));
+    a.title = "Add to the render list";
+    a.addEventListener("click", () => addToWorking(c.id));
     const del = document.createElement("button");
     del.className = "danger";
     del.textContent = "×";
-    del.title = "Delete";
+    del.title = "Delete permanently";
     del.addEventListener("click", async (e) => {
       e.stopPropagation();
+      if (!confirm(`Delete "${c.title || "this card"}" permanently?`)) return;
       await fetch(`/cards/${c.id}`, { method: "DELETE" });
       const node = findCardNode(c.id);
       if (node) node.remove();
@@ -190,25 +208,53 @@ async function refreshLibrary() {
     li.appendChild(del);
     libraryList.appendChild(li);
   });
+  updatePalette();
 }
 
-async function loadCardIntoBuilder(id) {
+// Populate each card's colour swatches with the colours already in use.
+async function updatePalette() {
+  const colors = await (await fetch("/colors")).json();
+  builder.querySelectorAll(".card-editor").forEach((node) => {
+    const box = node.querySelector(".swatches");
+    box.innerHTML = "";
+    colors.forEach((col) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "swatch";
+      b.style.background = col;
+      b.title = col;
+      b.addEventListener("click", () => {
+        node.querySelector(".f-color").value = col;
+        scheduleSave(node);
+      });
+      box.appendChild(b);
+    });
+  });
+}
+
+// Add a saved card to the working list, or bump its copies if already there.
+async function addToWorking(id) {
+  await fetch(`/working/${id}`, { method: "POST" });
   let node = findCardNode(id);
   if (node) {
-    node.scrollIntoView({ behavior: "smooth", block: "center" });
-    return;
+    const f = node.querySelector(".f-copies");
+    f.value = (parseInt(f.value) || 1) + 1;
+  } else {
+    const res = await fetch(`/cards/${id}`);
+    if (!res.ok) return;
+    node = buildCard({ ...(await res.json()), copies: 1 });
+    refreshLibrary();
   }
-  const res = await fetch(`/cards/${id}`);
-  if (!res.ok) return;
-  node = buildCard(await res.json());
   node.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 // ------------------------------------------------------------------ toolbar
-document.getElementById("add-card").addEventListener("click", () => {
-  const data = { id: uuid(), color: "#2f4a63", description: [] };
+document.getElementById("add-card").addEventListener("click", async () => {
+  const data = { id: uuid(), color: "#2f4a63", description: "", copies: 1 };
   const node = buildCard(data);
-  saveCard(node); // persist immediately so it appears in the library
+  await saveCard(node); // persist the new card to disk / Library
+  await fetch(`/working/${data.id}`, { method: "POST" }); // add to render list
+  refreshLibrary();
   node.querySelector(".f-title").focus();
 });
 
@@ -240,14 +286,21 @@ document.getElementById("download").addEventListener("click", async () => {
 
 // ------------------------------------------------------------------ init
 async function init() {
-  const res = await fetch("/cards");
-  const cards = await res.json();
-  for (const c of cards) {
-    const full = await (await fetch(`/cards/${c.id}`)).json();
-    buildCard(full);
-  }
-  if (cards.length === 0) {
-    buildCard({ id: uuid(), color: "#2f4a63", description: [] });
+  // The working list = cards currently loaded for rendering (each with copies).
+  const working = await (await fetch("/working")).json();
+  working.forEach((card) => buildCard(card));
+
+  if (working.length === 0) {
+    // Nothing loaded. If there are no saved cards at all, start with a blank
+    // one; otherwise leave the builder empty so the user can pick from the
+    // Library.
+    const lib = await (await fetch("/cards")).json();
+    if (lib.length === 0) {
+      const data = { id: uuid(), color: "#2f4a63", description: "", copies: 1 };
+      const node = buildCard(data);
+      await saveCard(node);
+      await fetch(`/working/${data.id}`, { method: "POST" });
+    }
   }
   refreshLibrary();
 }

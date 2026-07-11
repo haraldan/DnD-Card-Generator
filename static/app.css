@@ -71,11 +71,19 @@ button.danger { color: var(--accent); border: none; background: transparent; fon
 .card-editor { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 0.8rem; }
 .card-editor-head { display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.6rem; }
 .f-title { flex: 1; font-size: 1.05rem; font-weight: 600; padding: 0.4rem 0.5rem; border: 1px solid var(--line); border-radius: 6px; }
+.copies { flex: 0 0 auto; flex-direction: row; align-items: center; gap: 0.3rem; font-size: 0.8rem; color: var(--muted); }
+.copies input { width: 3.4rem; }
+
+#library-list li.in-list a { font-weight: 600; }
+#library-list li.in-list a::before { content: "▸ "; color: var(--muted); }
 
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
 label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.8rem; color: var(--muted); }
 input[type=text], textarea { font: inherit; padding: 0.4rem 0.5rem; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); width: 100%; }
 input[type=color] { width: 100%; height: 2.2rem; padding: 2px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); }
+.swatches { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 3px; }
+.swatch { width: 18px; height: 18px; padding: 0; border: 1px solid var(--line); border-radius: 4px; cursor: pointer; }
+.swatch:hover { outline: 2px solid var(--muted); }
 textarea { resize: vertical; }
 
 .image-row { display: flex; gap: 0.8rem; align-items: center; margin: 0.7rem 0; }

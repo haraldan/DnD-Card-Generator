@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from cardgen import render_item_cards, RenderOptions, get_provider
+from cardgen.layout import DEFAULT_COLOR
 
 from . import storage
 from .schema import CardIn, to_native, to_browser
@@ -33,6 +34,7 @@ def _startup():
 
 class CardWithId(CardIn):
     id: str
+    copies: int = 1
 
 
 class Deck(BaseModel):
@@ -66,6 +68,13 @@ def list_cards():
     return storage.list_cards()
 
 
+@app.get("/colors")
+def colors():
+    # Always offer the default colour first, then the ones already in use.
+    used = storage.used_colors()
+    return [DEFAULT_COLOR] + [c for c in used if c != DEFAULT_COLOR]
+
+
 @app.get("/cards/{card_id}")
 def get_card(card_id: str):
     _valid_id_or_404(card_id)
@@ -86,6 +95,44 @@ def put_card(card_id: str, card: CardIn):
 def remove_card(card_id: str):
     _valid_id_or_404(card_id)
     storage.delete_card(card_id)
+    return {"ok": True}
+
+
+# ---------------------------------------------------------------- working list
+@app.get("/working")
+def get_working():
+    """The current render list: each saved card plus how many copies."""
+    out = []
+    for entry in storage.load_working():
+        card = storage.load_card(entry["id"])
+        if card is None:
+            continue
+        out.append({**to_browser(card), "copies": entry["copies"]})
+    return out
+
+
+@app.post("/working/{card_id}")
+def working_add(card_id: str):
+    _valid_id_or_404(card_id)
+    storage.add_working(card_id)
+    return {"ok": True}
+
+
+class Copies(BaseModel):
+    copies: int = 1
+
+
+@app.put("/working/{card_id}")
+def working_set_copies(card_id: str, body: Copies):
+    _valid_id_or_404(card_id)
+    storage.set_working_copies(card_id, body.copies)
+    return {"ok": True}
+
+
+@app.delete("/working/{card_id}")
+def working_remove(card_id: str):
+    _valid_id_or_404(card_id)
+    storage.remove_working(card_id)
     return {"ok": True}
 
 
@@ -136,7 +183,10 @@ def _render_deck(deck: Deck) -> tuple[bytes, list]:
     for card in deck.cards:
         native = to_native(card)
         native["_id"] = card.id
-        entries.append(storage.entry_for_render(native))
+        entry = storage.entry_for_render(native)
+        # Render the card `copies` times (min 1).
+        for _ in range(max(1, int(card.copies or 1))):
+            entries.append(entry)
     options = RenderOptions()
     pdf = render_item_cards(entries, options)
     return pdf, options.errors

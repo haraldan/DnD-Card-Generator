@@ -30,7 +30,15 @@ and reloaded next time.
 - Every edit autosaves to `<data>/cards/<id>.yaml`; uploaded artwork goes to
   `<data>/images/<id>.<ext>`. Both are plain files you can edit or back up on the
   host, and they survive container restarts.
-- The **Library** panel lists saved cards; click one to reload it.
+- The **Library** (left) is your full, persistent collection of saved cards. The
+  centre is the **working list** — the cards currently rendered into the PDF
+  (persisted in `<data>/working.yaml`). Clicking a Library card adds it to the
+  working list (clicking again increases its **Copies**); a card's **×** removes
+  it from the working list but keeps it saved; the Library's **×** deletes it
+  permanently.
+- Each card has a **Copies** count so the same card can be printed multiple times.
+- The colour picker shows swatches of colours already used by other cards for
+  quick reuse.
 - Images are optional (a placeholder is used otherwise) and can be cropped to the
   card's aspect ratio in the browser before upload.
 

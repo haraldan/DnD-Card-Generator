@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 DATA_DIR = pathlib.Path(os.environ.get("CARDGEN_DATA_DIR", "/data"))
 CARDS_DIR = DATA_DIR / "cards"
 IMAGES_DIR = DATA_DIR / "images"
+# Ordered list of card ids currently loaded for rendering (the "working list").
+WORKING_FILE = DATA_DIR / "working.yaml"
 
 _ALLOWED_IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
 
@@ -116,6 +118,88 @@ def delete_card(card_id: str):
         path.unlink()
     for img in IMAGES_DIR.glob(f"{cid}.*"):
         img.unlink()
+    # A deleted card can no longer be in the working list.
+    remove_working(cid)
+
+
+# --------------------------------------------------------------- working list
+# The working list is an ordered list of {"id": <uuid>, "copies": <int>} — the
+# cards currently loaded for rendering, and how many times each is rendered.
+def load_working():
+    """Return the ordered working list, dropping entries whose card file no
+    longer exists and coalescing duplicates."""
+    if not WORKING_FILE.exists():
+        return []
+    try:
+        with open(WORKING_FILE, "r") as f:
+            raw = yaml.safe_load(f) or []
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Unreadable working list: %s", exc)
+        return []
+    result = []
+    index = {}
+    for item in raw:
+        if isinstance(item, dict):
+            rid, copies = item.get("id"), item.get("copies", 1)
+        else:  # tolerate a bare id
+            rid, copies = item, 1
+        try:
+            cid = _valid_id(rid)
+        except ValueError:
+            continue
+        if not _card_path(cid).exists():
+            continue
+        copies = max(1, int(copies or 1))
+        if cid in index:
+            index[cid]["copies"] += copies
+        else:
+            entry = {"id": cid, "copies": copies}
+            index[cid] = entry
+            result.append(entry)
+    return result
+
+
+def _save_working(entries):
+    _atomic_write(WORKING_FILE, yaml.safe_dump(entries, sort_keys=False))
+
+
+def add_working(card_id: str):
+    """Add the card to the working list, or increment its copies if present."""
+    cid = _valid_id(card_id)
+    entries = load_working()
+    for entry in entries:
+        if entry["id"] == cid:
+            entry["copies"] += 1
+            break
+    else:
+        entries.append({"id": cid, "copies": 1})
+    _save_working(entries)
+
+
+def set_working_copies(card_id: str, copies: int):
+    """Set the copies for a card (adds it if missing; removes it if < 1)."""
+    cid = _valid_id(card_id)
+    copies = int(copies)
+    entries = load_working()
+    for entry in entries:
+        if entry["id"] == cid:
+            if copies >= 1:
+                entry["copies"] = copies
+            else:
+                entries = [e for e in entries if e["id"] != cid]
+            break
+    else:
+        if copies >= 1:
+            entries.append({"id": cid, "copies": copies})
+    _save_working(entries)
+
+
+def remove_working(card_id: str):
+    cid = _valid_id(card_id)
+    entries = load_working()
+    kept = [e for e in entries if e["id"] != cid]
+    if len(kept) != len(entries):
+        _save_working(kept)
 
 
 def list_cards():
@@ -141,6 +225,21 @@ def list_cards():
     for c in cards:
         c.pop("mtime", None)
     return cards
+
+
+def used_colors():
+    """Distinct card colours across all saved cards, most-used first."""
+    counts = {}
+    for path in CARDS_DIR.glob("*.yaml"):
+        try:
+            with open(path, "r") as f:
+                doc = yaml.safe_load(f) or {}
+        except Exception:  # noqa: BLE001
+            continue
+        color = doc.get("color")
+        if color:
+            counts[color] = counts.get(color, 0) + 1
+    return [c for c, _ in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))]
 
 
 def entry_for_render(card: dict) -> dict:

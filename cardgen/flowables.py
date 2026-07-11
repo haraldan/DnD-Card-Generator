@@ -25,16 +25,16 @@ class LineDivider(Flowable):
     carries paragraph-like space above and below so blank lines around a `---`
     read as a real break."""
 
-    def __init__(self, fill_color="black", line_height=0.4 * mm, extend=0):
+    def __init__(self, fill_color="black", line_height=0.4 * mm, extend=0, space=0.8 * mm):
         self.fill_color = fill_color
         self.line_height = line_height
         self.extend = extend
         self.width = 0
         self.height = line_height
-        # Spacing around the rule is provided by blank lines in the description,
-        # so the flowable itself adds none.
-        self.spaceBefore = 0
-        self.spaceAfter = 0
+        # A small built-in offset so the rule never touches adjacent text; blank
+        # lines in the description add further gaps on top of this.
+        self.spaceBefore = space
+        self.spaceAfter = space
 
     def wrap(self, available_width, available_height):
         self.width = available_width
