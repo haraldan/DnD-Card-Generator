@@ -93,7 +93,7 @@ entries = [
     {
         "title": "Vicious Battleaxe",
         "subtitle": "Weapon (battleaxe), rare",
-        "color": "#2f4a63",
+        "color": "#24394d",
         "description": (
             "1d8 slashing\n\n"
             "---\n\n"

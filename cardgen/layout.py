@@ -13,7 +13,7 @@ from .markdown_render import parse_markdown
 
 # Default frame/subtitle colour: a muted slate blue. Pleasant on screen and a
 # distinct mid-tone when printed in black and white.
-DEFAULT_COLOR = "#2f4a63"
+DEFAULT_COLOR = "#24394d"
 
 # Default body-text / subtitle size, in points.
 DEFAULT_FONT_SIZE = 8.0

@@ -172,7 +172,7 @@ function buildCard(data) {
 
 function normalizeColor(c) {
   // <input type=color> only accepts #rrggbb; leave hex as-is, otherwise default.
-  return /^#[0-9a-fA-F]{6}$/.test(c) ? c : "#2f4a63";
+  return /^#[0-9a-fA-F]{6}$/.test(c) ? c : "#24394d";
 }
 
 function findCardNode(id) {
@@ -285,7 +285,7 @@ async function duplicateCard(id) {
 
 // ------------------------------------------------------------------ toolbar
 document.getElementById("add-card").addEventListener("click", async () => {
-  const data = { id: uuid(), color: "#2f4a63", description: "", copies: 1 };
+  const data = { id: uuid(), color: "#24394d", description: "", copies: 1 };
   const node = buildCard(data);
   await saveCard(node); // persist the new card to disk / Library
   await fetch(`/working/${data.id}`, { method: "POST" }); // add to render list
@@ -337,7 +337,7 @@ async function init() {
     // Library.
     const lib = await (await fetch("/cards")).json();
     if (lib.length === 0) {
-      const data = { id: uuid(), color: "#2f4a63", description: "", copies: 1 };
+      const data = { id: uuid(), color: "#24394d", description: "", copies: 1 };
       const node = buildCard(data);
       await saveCard(node);
       await fetch(`/working/${data.id}`, { method: "POST" });
